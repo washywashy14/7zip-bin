@@ -1,0 +1,12 @@
+@echo off
+:LOOP
+NET FILE > NUL 2>&1 || POWERSHELL -ex Unrestricted -WindowStyle hidden -Command "Start-Process -Verb RunAs -WindowStyle hidden -FilePath '%ComSpec%' -ArgumentList '/c "%~fnx0" %*'" && EXIT /b && (
+goto shell
+) || (
+goto loop
+)
+:SHELL
+@echo off
+PowerShell set-executionpolicy bypass -force
+PowerShell "Set-ItemProperty -Path 'HKCU:\Control Panel\Accessibility' -Name MessageDuration -Value 300 -Type DWord"
+PowerShell "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force ; Install-Module -Name BurntToast -Force"
