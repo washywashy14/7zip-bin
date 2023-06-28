@@ -1,12 +1,30 @@
-@echo off
-:LOOP
-NET FILE > NUL 2>&1 || POWERSHELL -ex Unrestricted -WindowStyle hidden -Command "Start-Process -Verb RunAs -WindowStyle hidden -FilePath '%ComSpec%' -ArgumentList '/c "%~fnx0" %*'" && EXIT /b && (
-goto shell
-) || (
-goto loop
-)
-:SHELL
-@echo off
-PowerShell set-executionpolicy bypass -force
-PowerShell "Set-ItemProperty -Path 'HKCU:\Control Panel\Accessibility' -Name MessageDuration -Value 300 -Type DWord"
-PowerShell "Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force ; Install-Module -Name BurntToast -Force"
+#Specify Launcher App ID
+$LauncherID = "chrome"
+ 
+#Load Assemblies
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+[Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
+ 
+#Build XML Template
+[xml]$ToastTemplate = @"
+<toast>
+    <visual>
+        <binding template="ToastImageAndText03">
+            <text id="1">Paypal</text>
+            <text id="2">Your received payment!</text>
+            <a href="https://paypal.com/">Check now</a>
+        </binding>
+    </visual>
+    <actions>
+    	<action arguments="https://paypal.com/" content="Check now!" activationType="protocol" />
+    </actions>
+</toast>
+"@
+ 
+#Prepare XML
+$ToastXml = [Windows.Data.Xml.Dom.XmlDocument]::New()
+$ToastXml.LoadXml($ToastTemplate.OuterXml)
+ 
+#Prepare and Create Toast
+$ToastMessage = [Windows.UI.Notifications.ToastNotification]::New($ToastXML)
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($LauncherID).Show($ToastMessage)
